@@ -30,3 +30,7 @@ aws cloudformation describe-stacks --stack-name $stack_name --query "Stacks[0].O
 # ECRへのプッシュ
 aws cloudformation describe-stacks --stack-name $stack_name --query "Stacks[0].Outputs[?OutputKey=='PushCommand'].OutputValue" --output text --no-cli-pager | bash
 ```
+
+## 継続的デリバリー
+
+`v-*`という形式のタグがついたコミットをプッシュすると、GitHub Actionsが実行され、ECRにコンテナイメージがプッシュされます。  
