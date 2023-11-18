@@ -1,0 +1,32 @@
+name: cd
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - v-*
+
+env:
+  CLOUDFORMATION_STACK_NAME: ${{ secrets.PROJECT_NAME }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Provision
+        run: aws cloudformation deploy --stack-name ${{ env.CLOUDFORMATION_STACK_NAME }} --template ./template.yml --no-fail-on-empty-changeset --no-cli-pager
+      - name: Login
+        run: aws cloudformation describe-stacks --stack-name ${{ env.CLOUDFORMATION_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='LoginCommand'].OutputValue" --output text --no-cli-pager | bash
+      - name: Build
+        run: aws cloudformation describe-stacks --stack-name ${{ env.CLOUDFORMATION_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='BuildCommand'].OutputValue" --output text --no-cli-pager | bash
+      - name: Tag
+        run: aws cloudformation describe-stacks --stack-name ${{ env.CLOUDFORMATION_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='TagCommand'].OutputValue" --output text --no-cli-pager | bash
+      - name: Push
+        run: aws cloudformation describe-stacks --stack-name ${{ env.CLOUDFORMATION_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='PushCommand'].OutputValue" --output text --no-cli-pager | bash
