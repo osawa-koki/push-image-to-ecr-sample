@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Docker image build and push to ECR"
+
+Resources:
+  Repository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub ${AWS::StackName}-repository
+
+Outputs:
+  LoginCommand:
+    Value: !Sub aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+  BuildCommand:
+    Value: !Sub docker build -t ${AWS::StackName}-image .
+  TagCommand:
+    Value: !Sub docker tag ${AWS::StackName}-image:latest ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${AWS::StackName}-repository:latest
+  PushCommand:
+    Value: !Sub docker push ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${AWS::StackName}-repository:latest
+  RepositoryUri:
+    Value: !GetAtt Repository.RepositoryUri
